@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+gspread
+google-auth
+google-auth-oauthlib
+python-dotenv

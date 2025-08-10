@@ -1,7 +1,9 @@
-## Sync2Cal Scraper
+## Sync2Cal Events API
+
+![Sync2Cal Logo](assets/Sync2Cal.png)
 
 
-Sync2Cal Scraper turns information from popular websites into calendar events that you can subscribe to. You get simple web links (ICS feeds) that work with Google Calendar, Apple Calendar, Outlook, and others. Each “integration” knows how to read one source (like Twitch, IMDb, etc.) and present upcoming items as calendar events.
+Sync2Cal Events API turns information from popular websites into calendar events that you can subscribe to. You get simple web links (ICS feeds) that work with Google Calendar, Apple Calendar, Outlook, and others. Each “integration” knows how to read one source (like Twitch, IMDb, etc.) and present upcoming items as calendar events.
 
 ### Table of Contents
 - [Setup](#setup)
@@ -53,7 +55,7 @@ from fastapi import FastAPI, APIRouter
 from base import mount_integration_routes
 from integrations.my_integration import MyIntegration, MyCalendar
 
-app = FastAPI(title="Scraper")
+app = FastAPI(title="MyIntegration")
 
 my_router = APIRouter(prefix="/mysource", tags=["MySource"])
 my_integration = MyIntegration(

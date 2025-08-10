@@ -1,4 +1,3 @@
-## Sync2Cal Events API
 
 ![Sync2Cal Logo](assets/Sync2Cal.png)
 

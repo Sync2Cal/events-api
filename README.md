@@ -1,6 +1,9 @@
 
 ![Sync2Cal Logo](assets/Sync2Cal.png)
 
+![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
+
 
 Sync2Cal Events API turns information from popular websites into calendar events that you can subscribe to. You get simple web links (ICS feeds) that work with Google Calendar, Apple Calendar, Outlook, and others. Each “integration” knows how to read one source (like Twitch, IMDb, etc.) and present upcoming items as calendar events.
 
@@ -8,14 +11,15 @@ Sync2Cal Events API turns information from popular websites into calendar events
 - [Setup](#setup)
 - [Credentials](#credentials)
 - [Creating Your Own Integration (Contributing Guide)](#creating-your-own-integration-inherit-the-base-class)
-- [Server Mount Example](#thats-it-mount-it-in-serverpy-with-a-small-router-and-it-will-appear-in-docs-with-a-single-events-endpoint)
- - [Existing Integrations and Credentials](#integrations-and-credentials)
+- [Mounting in main.py](#mounting-in-mainpy)
+- [API Endpoints](#api-endpoints)
+- [Existing Integrations and Credentials](#integrations-and-credentials)
 
 ## Setup
 1) Install Python 3.10+ and create a virtual environment.
 2) Install dependencies: `pip install -r requirements.txt`.
 3) Copy `env.template` to `.env` and fill in any credentials you have.
-4) Run the server: `uvicorn server:app --reload --env-file .env` and open `http://localhost:8000/docs`.
+4) Run the server: `uvicorn main:app --reload --env-file .env` and open `http://localhost:8000/docs`.
 
 ### Credentials
 - Keep your `.env` file private; it is already ignored by git.
@@ -46,10 +50,10 @@ class MyIntegration(IntegrationBase):
         return None
 ```
 
-That’s it. Mount it in `server.py` with a small router, and it will appear in `/docs` with a single `/events` endpoint.
+That’s it. Mount it in `main.py` with a small router, and it will appear in `/docs` with a single `/events` endpoint.
 
 ```python
-# server.py
+# main.py
 from fastapi import FastAPI, APIRouter
 from base import mount_integration_routes
 from integrations.my_integration import MyIntegration, MyCalendar
@@ -85,5 +89,27 @@ app.include_router(my_router)
     `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}/eventsnextleague.php?id=4328`.
 
 Use `.env` to store any values you need. If you don’t use a particular integration, you can leave its values empty.
+
+
+### Mounting in `main.py`
+This repo’s `main.py` uses a clean loop to register integrations. Each integration is instantiated and mounted automatically based on its `id` and `name`.
+
+```python
+from fastapi import APIRouter
+from base import mount_integration_routes
+
+integrations = [
+    # ... instances of IntegrationBase subclasses ...
+]
+
+for integration in integrations:
+    prefix = f"/{integration.id.replace('_', '-')}"
+    router = APIRouter(prefix=prefix, tags=[integration.name])
+    mount_integration_routes(router, integration)
+    app.include_router(router)
+```
+
+## API Endpoints
+- See docs/ENDPOINTS.md for details on the `/events` route, the `ics` parameter, and example requests.
 
 

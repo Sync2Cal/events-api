@@ -1,0 +1,32 @@
+---
+description: HTTP requests, scraping practices, and data normalization
+globs:
+  - "integrations/**/*.py"
+alwaysApply: true
+---
+
+HTTP/Requests
+- Use `requests` with explicit `timeout` (10–20s typical). Call `raise_for_status()`.
+- Set a realistic `User-Agent` only when sites require it; otherwise use defaults.
+- Handle `requests.RequestException` and return `HTTPException(status_code=502, detail=...)`.
+
+Scraping
+- Prefer structured endpoints over HTML when available. If scraping HTML, use `BeautifulSoup('lxml' or 'html.parser')`.
+- Guard for missing nodes; skip items that cannot be parsed instead of crashing.
+- Normalize text via `.get_text(strip=True)`.
+- Avoid brittle CSS selectors; prefer semantic tags and stable attributes.
+
+Dates and time
+- Input parameters should accept simple strings like `YYYY-MM-DD`.
+- For all-day events, set `end = start + timedelta(days=1)` and `all_day=True`.
+- Default times to 08:00 UTC for theatrical releases unless the source provides a time.
+
+Data hygiene
+- Build deterministic `uid` strings: prefix with provider and stable id (e.g., `tmdb-<slug>-<date>`).
+- Use helper-like `utils.make_slug` when needed.
+- Keep `description` compact and informative, including source URL if helpful.
+
+Examples
+@integrations/imdb.py
+@integrations/moviedb.py
+

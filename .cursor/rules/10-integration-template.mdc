@@ -1,0 +1,77 @@
+---
+description: Template and checklist for building a new integration
+globs:
+  - "integrations/**/*.py"
+alwaysApply: false
+---
+
+Use this template when creating a new provider under `integrations/`.
+
+Checklist
+- Define `Calendar` and `Integration` classes in the same file
+- `Calendar.fetch_events(...) -> List[Event]`
+- Return `all_day` events where appropriate; set `end = start + timedelta(days=1)`
+- Convert upstream errors to `HTTPException`
+- Expose parameters with safe defaults; types must be simple (str, int, bool)
+- Avoid global mutable state; use locals within `fetch_events`
+- Keep timeouts and headers minimal and explicit
+
+Example
+
+```python
+from typing import List, Optional
+from datetime import datetime, timedelta
+
+import requests
+from fastapi import HTTPException
+from base import CalendarBase, Event, IntegrationBase
+
+
+class ExampleCalendar(CalendarBase):
+    def fetch_events(
+        self,
+        start_date: Optional[str] = None,
+        max_items: int = 100,
+    ) -> List[Event]:
+        try:
+            # Input normalization
+            start_dt = (
+                datetime.strptime(start_date, "%Y-%m-%d") if start_date else datetime.utcnow()
+            )
+
+            # Upstream call
+            response = requests.get("https://example.com/api", timeout=15)
+            response.raise_for_status()
+            data = response.json()
+
+            events: List[Event] = []
+            for item in data[:max_items]:
+                start = start_dt
+                end = start + timedelta(days=1)
+                events.append(
+                    Event(
+                        uid=f"example-{item['id']}",
+                        title=item["title"],
+                        start=start,
+                        end=end,
+                        all_day=True,
+                        description=item.get("description", ""),
+                        location=item.get("url", ""),
+                    )
+                )
+            self.events = events
+            return events
+        except requests.RequestException as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+class ExampleIntegration(IntegrationBase):
+    def fetch_calendars(self, *args, **kwargs):
+        return None
+```
+
+After creating the file, add an entry to `integration_definitions` in `main.py`.
+@main.py
+

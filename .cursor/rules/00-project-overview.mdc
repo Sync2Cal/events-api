@@ -1,0 +1,51 @@
+---
+description: Project architecture, conventions, and how to add integrations
+globs:
+  - "**/*.py"
+alwaysApply: true
+---
+
+This project is a FastAPI service that exposes calendar events via simple HTTP endpoints, with each integration implementing a `CalendarBase.fetch_events` method.
+
+- Architecture
+  - `base/` defines core primitives:
+    - `IntegrationBase`: integration metadata and multi-calendar hooks
+    - `CalendarBase`: contract for `fetch_events(...)-> List[Event]`
+    - `Event`: dataclass for event payload
+    - `mount_integration_routes(...)`: wires `GET /events` using a wrapper around `CalendarBase.fetch_events`
+  - `integrations/` contains one file per provider (IMDb, TMDB, etc.) with two classes: `XyzCalendar(CalendarBase)` and `XyzIntegration(IntegrationBase)`
+  - `main.py` configures all integrations via a single `integration_definitions` list and mounts them in a loop
+
+- Routing model (do not hand-roll routes for integrations)
+  - Always use `mount_integration_routes(router, integration_instance)` to add `GET /events`
+  - The wrapper injects the `ics: bool = True` parameter. When `ics=true`, responses are returned as plain text ICS. When `ics=false`, JSON list of `Event` objects is returned.
+  - The route summary is auto-derived: "Fetch events for {integration.name}"
+
+- Adding a new integration (single-calendar)
+  1) Create `integrations/<name>.py` with:
+     - `class <Name>Calendar(CalendarBase)` implementing `fetch_events(...)-> List[Event]`
+     - `class <Name>Integration(IntegrationBase)`; keep `fetch_calendars` as `None` unless you support multi-calendar
+  2) Add an entry to `integration_definitions` in `main.py` with keys:
+     - `prefix`, `tag`, `integration_class`, `calendar_class`, `id`, `name`, `description`, `base_url`, `multi_calendar`
+  3) Do not add manual FastAPI routes; rely on `mount_integration_routes`
+
+- Event construction
+  - Always populate: `uid`, `title`, `start`, `end`
+  - Prefer day-long events for release dates by using `end = start + timedelta(days=1)` and `all_day=True` when appropriate
+  - Set `description` and `location` with helpful, linkable info (e.g., provider detail page)
+
+- Error handling
+  - Wrap provider/network errors into `HTTPException` (e.g., 502 for upstream failure; 500 otherwise)
+  - Validate and normalize inputs in `fetch_events` signature; provide defaults and types
+
+- Dependencies
+  - Use `requests` with reasonable `timeout` and minimal headers; use `BeautifulSoup` for HTML parsing when scraping
+  - Keep provider-specific logic within the integration file
+
+- Referenced files
+@base/calendar.py
+@base/integration.py
+@base/routes.py
+@base/models.py
+@main.py
+

@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+lxml
 requests
 beautifulsoup4
 gspread

@@ -1,0 +1,45 @@
+---
+description: How to register integrations in main.py using the shared loop
+globs:
+  - "main.py"
+alwaysApply: true
+---
+
+Registration model in `main.py`
+- Do not add manual route blocks. Instead, append an object to `integration_definitions` with the keys:
+  - `prefix` (str): Base path, e.g., `/imdb`
+  - `tag` (str): OpenAPI/Swagger tag name
+  - `integration_class` (type): The `IntegrationBase` subclass
+  - `calendar_class` (type): The `CalendarBase` subclass
+  - `id` (str): Stable technical id
+  - `name` (str): Human name
+  - `description` (str): Short summary for docs
+  - `base_url` (str): Provider base URL
+  - `multi_calendar` (bool): Whether `master_csv`/`fetch_calendars` is expected
+
+Example entry
+```python
+integration_definitions.append({
+    "prefix": "/example",
+    "tag": "Example",
+    "integration_class": ExampleIntegration,
+    "calendar_class": ExampleCalendar,
+    "id": "example",
+    "name": "Example",
+    "description": "Example provider events",
+    "base_url": "https://example.com",
+    "multi_calendar": False,
+})
+```
+
+The loop will:
+- Initialize `APIRouter(prefix, tags)`
+- Instantiate the integration with the metadata
+- Call `mount_integration_routes(router, integration)`
+- `app.include_router(router)`
+
+This keeps parity across all providers and minimizes duplication.
+
+Reference
+@main.py
+

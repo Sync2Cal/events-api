@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from integrations.twitch import TwitchIntegration, TwitchCalendar
 from integrations.google_sheets import (
     GoogleSheetsIntegration,
@@ -16,10 +17,20 @@ from integrations.shows import ShowsIntegration, ShowsCalendar
 from integrations.releases import ReleasesIntegration, ReleasesCalendar
 from integrations.sportsdb import SportsDbIntegration, SportsDbCalendar
 from integrations.weather import WeatherIntegration, WeatherCalendar
+from integrations.weather_geocode import geocode_router
 from base import mount_integration_routes
 
 
 app = FastAPI(title="Events API")
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins like ["https://sync2cal.com"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 integrations = [
@@ -119,3 +130,6 @@ for integration in integrations:
     router = APIRouter(prefix=prefix, tags=[integration.name])
     mount_integration_routes(router, integration)
     app.include_router(router)
+
+# Add weather geocoding endpoint
+app.include_router(geocode_router)

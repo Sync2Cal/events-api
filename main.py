@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from integrations.twitch import TwitchIntegration, TwitchCalendar
@@ -24,9 +25,22 @@ from base import mount_integration_routes
 app = FastAPI(title="Events API")
 
 # Add CORS middleware to allow frontend requests
+# Security: When allow_credentials=True, we cannot use allow_origins=["*"]
+# Must specify exact origins to prevent cross-site request attacks
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env:
+    # Parse comma-separated list of allowed origins
+    allowed_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+else:
+    # Default to production origins if not set
+    allowed_origins = [
+        "https://sync2cal.com",
+        "https://www.sync2cal.com",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins like ["https://sync2cal.com"]
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

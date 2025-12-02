@@ -11,7 +11,7 @@ geocode_router = APIRouter(tags=["Weather"])
 
 
 @geocode_router.get("/weather/geocode")
-async def geocode_cities(
+def geocode_cities(
     q: str = Query(..., description="City name to search for"),
     limit: int = Query(5, ge=1, le=10, description="Maximum number of results to return"),
 ):
@@ -80,13 +80,16 @@ async def geocode_cities(
             if isinstance(data, list):
                 all_results.extend(data)
         
-        # Remove duplicates based on city name and country
+        # Remove duplicates based on city name, state, and country
+        # Include state to avoid merging distinct cities (e.g., "Springfield, IL" vs "Springfield, MO")
         seen = set()
         unique_results = []
         for item in all_results:
             city_name = item.get("name", "")
+            state = item.get("state", "")
             country = item.get("country", "")
-            key = (city_name.lower(), country.lower())
+            # Include state in deduplication key to preserve distinct cities
+            key = (city_name.lower(), state.lower() if state else "", country.lower())
             if key not in seen:
                 seen.add(key)
                 unique_results.append(item)

@@ -143,9 +143,12 @@ def generate_ics(
                 event_lines.append(f"CATEGORIES:{categories_str}")
             
         uid = event.get('uid', str(uuid.uuid4()))
+        now = datetime.utcnow()
         event_lines.extend([
             f"UID:{uid}",
-            f"DTSTAMP:{format_datetime(datetime.utcnow())}",
+            f"DTSTAMP:{format_datetime(now)}",
+            f"CREATED:{format_datetime(now)}",
+            f"LAST-MODIFIED:{format_datetime(now)}",
             f"SUMMARY:{escape_text(name)}",
             "END:VEVENT"
         ])

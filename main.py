@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, APIRouter
 from integrations.twitch import TwitchIntegration, TwitchCalendar
 from integrations.google_sheets import (
@@ -12,6 +15,7 @@ from integrations.wwe import WweIntegration, WweCalendar
 from integrations.shows import ShowsIntegration, ShowsCalendar
 from integrations.releases import ReleasesIntegration, ReleasesCalendar
 from integrations.sportsdb import SportsDbIntegration, SportsDbCalendar
+from integrations.weather import WeatherIntegration, WeatherCalendar
 from base import mount_integration_routes
 
 
@@ -97,6 +101,14 @@ integrations = [
         description="TheSportsDB events",
         base_url="https://www.thesportsdb.com",
         calendar_class=SportsDbCalendar,
+        multi_calendar=False,
+    ),
+    WeatherIntegration(
+        id="weather",
+        name="Weather",
+        description="Daily weather forecasts",
+        base_url="https://api.openweathermap.org",
+        calendar_class=WeatherCalendar,
         multi_calendar=False,
     ),
 ]

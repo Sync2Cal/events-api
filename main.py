@@ -17,7 +17,7 @@ from integrations.wwe import WweIntegration, WweCalendar
 from integrations.shows import ShowsIntegration, ShowsCalendar
 from integrations.releases import ReleasesIntegration, ReleasesCalendar
 from integrations.sportsdb import SportsDbIntegration, SportsDbCalendar
-from integrations.weather import WeatherIntegration, WeatherCalendar
+from integrations.weather import DailyWeatherForecastIntegration, DailyWeatherForecastCalendar
 from integrations.weather_geocode import geocode_router
 from base import mount_integration_routes
 
@@ -128,12 +128,12 @@ integrations = [
         calendar_class=SportsDbCalendar,
         multi_calendar=False,
     ),
-    WeatherIntegration(
-        id="weather",
-        name="Weather",
+    DailyWeatherForecastIntegration(
+        id="daily-weather-forecast",
+        name="Daily Weather Forecast",
         description="Daily weather forecasts",
         base_url="https://api.openweathermap.org",
-        calendar_class=WeatherCalendar,
+        calendar_class=DailyWeatherForecastCalendar,
         multi_calendar=False,
     ),
 ]
@@ -145,5 +145,5 @@ for integration in integrations:
     mount_integration_routes(router, integration)
     app.include_router(router)
 
-# Add weather geocoding endpoint
+# Add weather geocoding endpoint (shared across all weather calendars)
 app.include_router(geocode_router)

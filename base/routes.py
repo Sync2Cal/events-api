@@ -38,9 +38,9 @@ def mount_integration_routes(router: APIRouter, integration: IntegrationBase):
                         "status": "CONFIRMED",
                     }
                 )
-            # For weather integration, include location in calendar name
+            # For daily weather forecast integration, include location in calendar name
             calendar_name = integration.name
-            if integration.id == "weather" and events and events[0].location:
+            if integration.id == "daily-weather-forecast" and events and events[0].location:
                 calendar_name = f"{integration.name} - {events[0].location}"
             
             ics_text = generate_ics(events=ics_events, calendar_name=calendar_name)

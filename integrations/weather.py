@@ -82,12 +82,12 @@ def get_weather_emoji(condition: str, description: str = "") -> str:
     return "🌡️"
 
 
-class WeatherCalendar(CalendarBase):
+class DailyWeatherForecastCalendar(CalendarBase):
     def fetch_events(
         self,
         location: str,
         api_key: Optional[str] = None,
-        days: int = 14,
+        days: int = 5,
         units: str = "metric",
     ) -> List[Event]:
         """
@@ -96,8 +96,8 @@ class WeatherCalendar(CalendarBase):
         Parameters:
         - location (str): City name (e.g., "New York, NY" or "London")
         - api_key (str, optional): OpenWeatherMap API key. If not provided, uses OPENWEATHERMAP_API_KEY environment variable.
-        - days (int): Number of days to fetch (default 14, max 16 for free tier)
-        - units (str): Temperature units - "metric" (Celsius), "imperial" (Fahrenheit), or "kelvin" (default: "metric")
+        - days (int): Desired number of days to fetch. In MVP this is automatically clamped to the available forecast horizon (about 5 days on OpenWeather free tier).
+        - units (str): Temperature units - "metric" (Celsius, default), "imperial" (Fahrenheit), or "kelvin" (default: "metric")
         """
         try:
             # Validate and normalize inputs
@@ -112,8 +112,9 @@ class WeatherCalendar(CalendarBase):
                 raise HTTPException(status_code=500, detail="OpenWeatherMap API key not configured. Please set OPENWEATHERMAP_API_KEY environment variable or provide api_key parameter.")
             
             api_key = api_key.strip()
-            if days < 1 or days > 16:
-                days = min(max(days, 1), 16)  # Clamp to valid range
+            # OpenWeatherMap free tier provides 5-day forecasts, so clamp to 5 days
+            if days < 1 or days > 5:
+                days = min(max(days, 1), 5)  # Clamp to valid range (1-5 days)
             
             location = location.strip()
             units = units.lower()
@@ -338,7 +339,7 @@ class WeatherCalendar(CalendarBase):
             raise HTTPException(status_code=500, detail=f"Failed to fetch weather events: {str(e)}") from e
 
 
-class WeatherIntegration(IntegrationBase):
+class DailyWeatherForecastIntegration(IntegrationBase):
     def fetch_calendars(self, *args, **kwargs):
         return None
 
